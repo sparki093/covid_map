@@ -8,3 +8,8 @@ Bat, also start with localhost, do change 'templates/index.html' -> fetch url on
 
 Run:
   app.py
+  
+ 
+Data in Database is static. 
+
+Данные данные должны автоматически обновляться с сайта Росстат и ложится в БД один раз в день, далее по запросу получаем данные и визуализируем
