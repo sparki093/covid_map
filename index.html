@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block css %}
+<style>
+	.stand {
+		display: flex;
+		justify-content: space-between;
+		height: 100vh;
+	}
+
+	.r {
+		background-color: black;
+	}
+
+	.tab {
+		font-size: 14px;
+		width: 300px;
+		height: 100%;
+		background: rgb(218, 209, 209);
+	}
+
+	.region {
+		margin-bottom: 3px;
+	}
+
+	.zaraz {
+		margin-bottom: 3px;
+	}
+
+	.smertey {
+		margin-bottom: 3px
+	}
+
+	.vizdorov {
+		margin-bottom: 3px
+	}
+
+	.total {
+		margin-bottom: 3px
+	}
+
+	#container {
+		width: 100%
+	}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- <button type="submit" id="sub">submit</button> -->
+<div class="stand">
+	<div class="tab">
+		<div class="region"></div>
+		<div class="zaraz"></div>
+		<div class="smertey"></div>
+		<div class="vizdorov"></div>
+		<div class="total"></div>
+	</div>
+	<div id="container" class="r"></div>
+</div>
+
+
+<script>
+	let dataset = []
+	const region = document.querySelector('.region')
+	const zarazen = document.querySelector('.zaraz')
+	const smertei = document.querySelector('.smertey')
+	const vizdorovlen = document.querySelector('.vizdorov')
+	const total = document.querySelector('.total')
+	anychart.onDocumentReady(function () {
+
+		//
+		fetch("https://covidflask1234.herokuapp.com/data", {
+			method: "GET",credentials: 'include'
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				console.log(data)
+				var map = anychart.map();
+				map.geoData(anychart.maps['russia']);
+				dataset = data
+
+				// set the series
+				const series = map.choropleth(data);
+				series.colorScale(anychart.scales.ordinalColor([{ less: 100000, color: "#CD5C5C" }, 
+																{ from: 100000, to: 200000, color: '#DC143C' },
+																{ from: 200001, to: 400000, color: '#FF4500' },
+																{ from: 400001, to: 600000, color: '#FF0000' },
+																{ from: 600001, to: 800000, color: '#B22222' }, 
+																{ greater: 800001, color: '#8B0000' }]))
+				const cr = map.colorRange(true)
+				//series.colorScale(anychart.scales.linearColor('#deebf7', '#3182bd'));
+				series.tooltip().format(function (e) {
+					return "Код региона: " + e.getData("id") + "\n" +
+						"Округ: " + e.getData("name") + "\n" +
+						"Заражений: " + e.getData("zarazeniy") + "\n"
+
+				})
+
+				// disable labels
+				series.labels(false);
+
+				// set the container
+				map.container('container');
+				map.draw();
+
+				//вывод по всей стране при загрузке
+				data = dataset.filter(e => { return e.number == 100 })
+				region.innerHTML = `<strong>Регион: </strong> ${data[0].name}`
+				zarazen.innerHTML = `<strong>Заражений: </strong> ${data[0].zarazeniy}`
+				smertei.innerHTML = `<strong>Смертей: </strong> ${data[0].smertei}`
+				vizdorovlen.innerHTML = `<strong>Выздоровлений: </strong> ${data[0].vizdorovleniy}`
+				total.innerHTML = `<strong>Заражено на настоящий момент: </strong> ${data[0].total_zaraz}`
+
+			})
+
+		const dataId = document.querySelector("#container")
+
+		dataId.addEventListener('click', function (e) {
+			const num = e.target.dataset.acWrapperId
+
+			if (num > 10 && num < 96) {
+				d = dataset.filter(e => {
+					return e.number == num
+				})
+				region.innerHTML = `<strong>Регион: </strong> ${d[0].name}`
+				zarazen.innerHTML = `<strong>Заражений: </strong> ${d[0].zarazeniy}`
+				smertei.innerHTML = `<strong>Смертей: </strong> ${d[0].smertei}`
+				vizdorovlen.innerHTML = `<strong>Выздоровлений: </strong> ${d[0].vizdorovleniy}`
+				total.innerHTML = `<strong>Заражено на настоящий момент: </strong> ${d[0].total_zaraz}`
+			} else {
+				data = dataset.filter(e => { return e.number == 100 })
+				region.innerHTML = `<strong>Регион: </strong> ${data[0].name}`
+				zarazen.innerHTML = `<strong>Заражений: </strong> ${data[0].zarazeniy}`
+				smertei.innerHTML = `<strong>Смертей: </strong> ${data[0].smertei}`
+				vizdorovlen.innerHTML = `<strong>Выздоровлений: </strong> ${data[0].vizdorovleniy}`
+				total.innerHTML = `<strong>Заражено на настоящий момент: </strong> ${data[0].total_zaraz}`
+			}
+		})
+
+	});
+</script>
+{% endblock %}
